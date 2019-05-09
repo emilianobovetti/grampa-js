@@ -1,8 +1,4 @@
-(function (root, factory) {
-
-  root.grampa = factory();
-
-}(this, function () {
+this.grampa = (function () {
 
   var is, grampa = {};
 
@@ -20,20 +16,26 @@
     return val === null ? 'null' : typeof unbox(val);
   }
 
-  function curry2 (fn) {
-    return function (a, b) {
-      if (arguments.length > 1) {
-        return fn(a, b);
-      }
+  function internalSlice (val, begin, end) {
+    return [].slice.call(val, begin, end == null ? val.length : end);
+  }
 
-      if (arguments.length > 0) {
-        return function (b_) {
-          return fn(a, b_);
-        };
-      }
+  function internalCurry (fn, numArgs, args) {
+    if (args.length >= numArgs) {
+      return fn.apply(null, args);
+    }
 
-      return fn;
+    return function () {
+      return internalCurry(fn, numArgs, args.concat(internalSlice(arguments)));
     };
+  }
+
+  function curry (fn, numArgs) {
+    return internalCurry(fn, numArgs == null ? fn.length : numArgs, []);
+  }
+
+  function curry2 (fn) {
+    return internalCurry(fn, 2, []);
   }
 
   is = curry2(function (expected, val) {
@@ -56,10 +58,10 @@
       (is.str(val) || hasOwnProperty(val, 0) || val.length === 0);
   };
 
-  grampa.slice = function (val) {
+  grampa.slice = function (val, begin, end) {
     return is.empty(val) ? []
-      : is.str(val) ? val.split('')
-      : [].slice.call(val, begin, arguments.length < 3 ? val.length : end);
+      : is.str(val) ? internalSlice(val.split(''), begin, end)
+      : internalSlice(val, begin, end);
   };
 
   grampa.toList = function (val) {
@@ -126,13 +128,17 @@
     return acc.length > 2 ? acc.slice(0, -2) + ' }' : '{}';
   };
 
+  grampa.is = is;
+
   grampa.unbox = unbox;
 
   grampa.typeOf = typeOf;
 
   grampa.hasOwnProperty = hasOwnProperty;
 
-  grampa.is = is;
+  grampa.curry = curry;
+
+  grampa.curry2 = curry2;
 
   grampa.path = (function () {
 
@@ -212,4 +218,4 @@
   }());
 
   return grampa;
-}));
+}());
