@@ -4,8 +4,7 @@
 
 }(this, function () {
 
-  var grampa = {};
-  var is;
+  var is, grampa = {};
 
   function hasOwnProperty (val, key) {
     return grampa.hasOwnProperty.call(val, key);
@@ -130,6 +129,8 @@
   grampa.unbox = unbox;
 
   grampa.typeOf = typeOf;
+
+  grampa.hasOwnProperty = hasOwnProperty;
 
   grampa.is = is;
 
