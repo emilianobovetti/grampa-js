@@ -3,7 +3,7 @@ this.grampa = (function () {
   var is, grampa = {};
 
   function hasOwnProperty (val, key) {
-    return grampa.hasOwnProperty.call(val, key);
+    return ({}).hasOwnProperty.call(val, key);
   }
 
   function unbox (val) {
@@ -190,13 +190,11 @@ this.grampa.display = (function () {
   };
 
   display.add = function () {
-    var container;
-
     if (arguments.length === 0) {
       return display.add.br();
     }
 
-    container = document.createElement('div');
+    var container = document.createElement('div');
 
     grampa.forEach(arguments, function (arg) {
       var text = grampa.stringify(arg) + ' ';
