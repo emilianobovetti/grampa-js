@@ -48,14 +48,20 @@ this.grampa = (function () {
   is.fun = is('function');
   is.bool = is('boolean');
 
+  is.int = function (val) {
+    return is.num(val) &&
+      isFinite(val) &&
+      Math.floor(val) === unbox(val);
+  };
+
   is.empty = function (val) {
     return val == null || val.length === 0;
   };
 
-  is.collection = function (val) {
+  is.list = function (val) {
     return val != null &&
-      is.num(val.length) &&
-      (is.str(val) || hasOwnProperty(val, 0) || val.length === 0);
+      is.int(val.length) &&
+      (val.length === 0 || hasOwnProperty(val, 0));
   };
 
   grampa.slice = function (val, begin, end) {
@@ -67,7 +73,7 @@ this.grampa = (function () {
   grampa.toList = function (val) {
     return is.empty(val) ? []
       : is.str(val) ? grampa.slice(val)
-      : is.collection(val) ? val
+      : is.list(val) ? val
       : [ val ];
   };
 
@@ -94,7 +100,7 @@ this.grampa = (function () {
       return String(val);
     }
 
-    if (is.collection(val)) {
+    if (is.list(val)) {
       return grampa.stringify.list(val);
     }
 
@@ -140,82 +146,82 @@ this.grampa = (function () {
 
   grampa.curry2 = curry2;
 
-  grampa.path = (function () {
+  return grampa;
+}());
 
-    var path = {};
+this.grampa.path = (function () {
 
-    path.sep = typeof ActiveXObject === 'function' ? '\\' : '/';
+  var path = {};
 
-    path.basename = function (str) {
-      return str.split(path.sep).pop();
-    };
+  path.sep = typeof ActiveXObject === 'function' ? '\\' : '/';
 
-    path.dirname = function (str) {
-      var pathList = str.split(path.sep);
-      pathList.pop();
+  path.basename = function (str) {
+    return str.split(path.sep).pop();
+  };
 
-      return pathList.join(path.sep);
-    };
+  path.dirname = function (str) {
+    var pathList = str.split(path.sep);
+    pathList.pop();
 
-    path.join = function () {
-      return grampa.slice(arguments).join(path.sep);
-    };
+    return pathList.join(path.sep);
+  };
 
-    return path;
-  }());
+  path.join = function () {
+    return grampa.slice(arguments).join(path.sep);
+  };
 
-  grampa.display = (function () {
+  return path;
+}());
 
-    function display () {
-      display.empty();
+this.grampa.display = (function () {
 
-      return display.add.apply(null, arguments);
-    }
+  function display () {
+    display.empty();
 
-    display.empty = function () {
-      grampa.forEach(display.blocks, function (block) {
-        display.box.removeChild(block);
-      });
+    return display.add.apply(null, arguments);
+  }
 
-      display.blocks = [];
-    };
-
-    display.add = function () {
-      var container;
-
-      if (arguments.length === 0) {
-        return display.add.br();
-      }
-
-      container = document.createElement('div');
-
-      grampa.forEach(arguments, function (arg) {
-        var text = grampa.stringify(arg) + ' ';
-
-        container.appendChild(document.createTextNode(text));
-      });
-
-      return display.add.element(container);
-    };
-
-    display.add.element = function (element) {
-      display.blocks.push(display.box.appendChild(element));
-
-      return element;
-    };
-
-    display.add.br = function () {
-      return display.add.element(document.createElement('br'));
-    };
+  display.empty = function () {
+    grampa.forEach(display.blocks, function (block) {
+      display.box.removeChild(block);
+    });
 
     display.blocks = [];
+  };
 
-    display.box = document.createElement('div');
+  display.add = function () {
+    var container;
 
-    document.body.insertBefore(display.box, document.body.firstChild);
+    if (arguments.length === 0) {
+      return display.add.br();
+    }
 
-    return display;
-  }());
+    container = document.createElement('div');
 
-  return grampa;
+    grampa.forEach(arguments, function (arg) {
+      var text = grampa.stringify(arg) + ' ';
+
+      container.appendChild(document.createTextNode(text));
+    });
+
+    return display.add.element(container);
+  };
+
+  display.add.element = function (element) {
+    display.blocks.push(display.box.appendChild(element));
+
+    return element;
+  };
+
+  display.add.br = function () {
+    return display.add.element(document.createElement('br'));
+  };
+
+  display.blocks = [];
+
+  display.box = document.createElement('div');
+
+  document.body.insertBefore(display.box, document.body.firstChild);
+
+  return display;
 }());
