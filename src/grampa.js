@@ -7,13 +7,32 @@ this.grampa = (function () {
   }
 
   function unbox (val) {
-    var unb = (val || {}).valueOf();
+    var isBoxed =
+      val instanceof Number ||
+      val instanceof String ||
+      val instanceof Boolean;
 
-    return typeof unb !== 'object' && typeof unb !== 'function' ? unb : val;
+    return isBoxed ? val.valueOf() : val;
   }
 
   function typeOf (val) {
-    return val === null ? 'null' : typeof unbox(val);
+    var unboxed = unbox(val);
+
+    if (unboxed === null) {
+      return 'null';
+    }
+
+    if (typeof unboxed === 'number') {
+      if (isNaN(unboxed)) {
+        return 'NaN';
+      }
+
+      if (!isFinite(unboxed)) {
+        return 'infinity';
+      }
+    }
+
+    return typeof unboxed;
   }
 
   function internalSlice (val, begin, end) {
@@ -50,7 +69,6 @@ this.grampa = (function () {
 
   is.int = function (val) {
     return is.num(val) &&
-      isFinite(val) &&
       Math.floor(val) === unbox(val);
   };
 
@@ -61,6 +79,7 @@ this.grampa = (function () {
   is.list = function (val) {
     return val != null &&
       is.int(val.length) &&
+      val.length >= 0 &&
       (val.length === 0 || hasOwnProperty(val, 0));
   };
 
